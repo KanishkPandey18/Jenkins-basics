@@ -5,31 +5,17 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
+                    sh 'mvn clean compile'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Code Analysis') {
-            steps {
-                sh 'mvn sonar:sonar'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                sh 'docker build -t springboot-app .'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
+                dir('java-maven-sonar-argocd-helm-k8s/spring-boot-app') {
+                    sh 'mvn test'
+                }
             }
         }
 
