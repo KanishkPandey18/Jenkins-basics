@@ -1,21 +1,37 @@
 pipeline {
   agent any
 
+  environment {
+    REGISTRY = "kanishkpandey.jfrog.io"
+    REPO = "docker-local"
+    IMAGE = "my-app"
+  }
+
   stages {
+
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/KanishkPandey18/Jenkins-basics'
+      }
+    }
 
     stage('Build Image') {
       steps {
         dir('multi-stage-multi-agent') {
-          sh 'docker build -t my-app .'
+          sh 'docker build -t $IMAGE .'
         }
       }
     }
 
     stage('Login to JFrog') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'jfrog-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+        withCredentials([usernamePassword(
+          credentialsId: 'jfrog-creds',
+          usernameVariable: 'USER',
+          passwordVariable: 'PASS'
+        )]) {
           sh '''
-          echo $PASS | docker login REGISTRY = "kanishkpandey.jfrog.io" -u $USER --password-stdin
+          echo $PASS | docker login $REGISTRY -u $USER --password-stdin
           '''
         }
       }
@@ -23,13 +39,13 @@ pipeline {
 
     stage('Tag Image') {
       steps {
-        sh 'docker tag my-app kanishkpandey.jfrog.io/docker-local/my-app:latest'
+        sh 'docker tag $IMAGE $REGISTRY/$REPO/$IMAGE:latest'
       }
     }
 
     stage('Push to JFrog') {
       steps {
-        sh 'docker push kanishkpandey.jfrog.io/docker-local/my-app:latest'
+        sh 'docker push $REGISTRY/$REPO/$IMAGE:latest'
       }
     }
   }
