@@ -9,12 +9,6 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/KanishkPandey18/Jenkins-basics'
-      }
-    }
-
     stage('Build Image') {
       steps {
         dir('multi-stage-multi-agent') {
