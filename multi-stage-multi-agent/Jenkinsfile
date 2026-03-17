@@ -23,13 +23,13 @@ pipeline {
 
     stage('Tag Image') {
       steps {
-        sh 'docker tag my-app kanishkpandey.jfrog.io/docker-repo/my-app:latest'
+        sh 'docker tag my-app kanishkpandey.jfrog.io/docker-local/my-app:latest'
       }
     }
 
     stage('Push to JFrog') {
       steps {
-        sh 'docker push kanishkpandey.jfrog.io/docker-repo/my-app:latest'
+        sh 'docker push kanishkpandey.jfrog.io/docker-local/my-app:latest'
       }
     }
   }
