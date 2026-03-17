@@ -1,20 +1,33 @@
 pipeline {
-  agent none
+  agent any
+
   stages {
-    stage('Back-end') {
-      agent {
-        docker { image 'maven:3.8.1-adoptopenjdk-11' }
-      }
+
+    stage('Build Image') {
       steps {
-        sh 'mvn --version'
+        sh 'docker build -t my-app .'
       }
     }
-    stage('Front-end') {
-      agent {
-        docker { image 'node:16-alpine' }
-      }
+
+    stage('Login to JFrog') {
       steps {
-        sh 'node --version'
+        withCredentials([usernamePassword(credentialsId: 'jfrog-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+          sh '''
+          echo $PASS | docker login yourcompany.jfrog.io -u $USER --password-stdin
+          '''
+        }
+      }
+    }
+
+    stage('Tag Image') {
+      steps {
+        sh 'docker tag my-app yourcompany.jfrog.io/docker-repo/my-app:latest'
+      }
+    }
+
+    stage('Push to JFrog') {
+      steps {
+        sh 'docker push yourcompany.jfrog.io/docker-repo/my-app:latest'
       }
     }
   }
