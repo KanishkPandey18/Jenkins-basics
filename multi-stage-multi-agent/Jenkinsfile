@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    REGISTRY = "CollegeArtifact.jfrog.io"
+    REGISTRY = "collegeartifact.jfrog.io"
     REPO = "docker-local"
     IMAGE = "my-app"
   }
