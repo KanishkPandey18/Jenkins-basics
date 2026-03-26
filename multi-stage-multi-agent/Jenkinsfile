@@ -2,8 +2,8 @@ pipeline {
   agent any
 
   environment {
-    REGISTRY = "collegeartifact.jfrog.io"
-    REPO = "docker-local"
+    REGISTRY = "localhost:8082"   // or your VM IP
+    REPO = "docker-hosted"
     IMAGE = "my-app"
   }
 
@@ -17,10 +17,10 @@ pipeline {
       }
     }
 
-    stage('Login to JFrog') {
+    stage('Login to Nexus') {
       steps {
         withCredentials([usernamePassword(
-          credentialsId: 'jfrog-creds',
+          credentialsId: 'nexus-creds',
           usernameVariable: 'USER',
           passwordVariable: 'PASS'
         )]) {
@@ -33,13 +33,13 @@ pipeline {
 
     stage('Tag Image') {
       steps {
-        sh 'docker tag $IMAGE $REGISTRY/$REPO/$IMAGE:latest'
+        sh 'docker tag $IMAGE $REGISTRY/$IMAGE:latest'
       }
     }
 
-    stage('Push to JFrog') {
+    stage('Push to Nexus') {
       steps {
-        sh 'docker push $REGISTRY/$REPO/$IMAGE:latest'
+        sh 'docker push $REGISTRY/$IMAGE:latest'
       }
     }
   }
