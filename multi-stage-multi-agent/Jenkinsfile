@@ -1,46 +1,51 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    REGISTRY = "localhost:8082"   // or your VM IP
-    REPO = "docker-hosted"
-    IMAGE = "my-app"
-  }
+    environment {
+        // Use the internal Docker service name and your hosted repo port
+        REGISTRY = "nexus:8082"
+        IMAGE = "my-app"
+        // Ensure this ID matches exactly what you created in Jenkins Credentials
+        CREDENTIALS_ID = 'nexus-deploy-creds'
+    }
 
-  stages {
-
-    stage('Build Image') {
-      steps {
-        dir('multi-stage-multi-agent') {
-          sh 'docker build -t $IMAGE .'
+    stages {
+        stage('Build Image') {
+            steps {
+                // Navigating to your specific sub-directory
+                dir('multi-stage-multi-agent') {
+                    sh "docker build -t ${IMAGE} ."
+                }
+            }
         }
-      }
-    }
 
-    stage('Login to Nexus') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'nexus-deploy-creds',
-          usernameVariable: 'USER',
-          passwordVariable: 'PASS'
-        )]) {
-          sh '''
-          echo $PASS | docker login $REGISTRY -u $USER --password-stdin
-          '''
+        stage('Login to Nexus') {
+            steps {
+                script {
+                    // This pulls the username and password from Jenkins Credentials store
+                    withCredentials([usernamePassword(
+                        credentialsId: "${CREDENTIALS_ID}",
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASS'
+                    )]) {
+                        sh "echo ${PASS} | docker login ${REGISTRY} -u ${USER} --password-stdin"
+                    }
+                }
+            }
         }
-      }
+
+        stage('Tag and Push') {
+            steps {
+                sh "docker tag ${IMAGE} ${REGISTRY}/${IMAGE}:latest"
+                sh "docker push ${REGISTRY}/${IMAGE}:latest"
+            }
+        }
     }
 
-    stage('Tag Image') {
-      steps {
-        sh 'docker tag $IMAGE $REGISTRY/$IMAGE:latest'
-      }
+    post {
+        always {
+            // Good practice: Logout to keep the build agent clean
+            sh "docker logout ${REGISTRY}"
+        }
     }
-
-    stage('Push to Nexus') {
-      steps {
-        sh 'docker push $REGISTRY/$IMAGE:latest'
-      }
-    }
-  }
 }
