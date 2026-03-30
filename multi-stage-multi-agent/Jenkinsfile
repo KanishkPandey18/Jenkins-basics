@@ -1,13 +1,12 @@
 pipeline {
     agent any
 
-    environment {
-        // Use the internal Docker service name and your hosted repo port
-        REGISTRY = "nexus:8082"
-        IMAGE = "my-app"
-        // Ensure this ID matches exactly what you created in Jenkins Credentials
-        CREDENTIALS_ID = 'nexus-deploy-creds'
-    }
+  environment {
+    // Change 'nexus' to the Docker Gateway IP
+    REGISTRY = "172.17.0.1:8082" 
+    IMAGE    = "my-app"
+    CRED_ID  = "nexus-deploy-creds"
+}
 
     stages {
         stage('Build Image') {
