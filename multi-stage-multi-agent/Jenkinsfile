@@ -1,17 +1,17 @@
 pipeline {
     agent any
 
-  environment {
-    // Change 'nexus' to the Docker Gateway IP
-    REGISTRY = "172.17.0.1:8082" 
-    IMAGE    = "my-app"
-    CRED_ID  = "nexus-deploy-creds"
-}
+    environment {
+        // Use the Docker Gateway IP for the internal connection
+        REGISTRY = "172.17.0.1:8082" 
+        IMAGE    = "my-app"
+        // Let's use a clear, consistent name here
+        NEXUS_CRED_ID = "nexus-deploy-creds" 
+    }
 
     stages {
         stage('Build Image') {
             steps {
-                // Navigating to your specific sub-directory
                 dir('multi-stage-multi-agent') {
                     sh "docker build -t ${IMAGE} ."
                 }
@@ -21,10 +21,10 @@ pipeline {
         stage('Login to Nexus') {
             steps {
                 script {
-                    // This pulls the username and password from Jenkins Credentials store
+                    // This variable name MUST match the environment block above
                     withCredentials([usernamePassword(
-                        credentialsId: "${CREDENTIALS_ID}",
-                        usernameVariable: 'USER',
+                        credentialsId: "${NEXUS_CRED_ID}", 
+                        usernameVariable: 'USER', 
                         passwordVariable: 'PASS'
                     )]) {
                         sh "echo ${PASS} | docker login ${REGISTRY} -u ${USER} --password-stdin"
@@ -43,7 +43,6 @@ pipeline {
 
     post {
         always {
-            // Good practice: Logout to keep the build agent clean
             sh "docker logout ${REGISTRY}"
         }
     }
